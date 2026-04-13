@@ -1,0 +1,8 @@
+bld/
+src_cache/
+test/
+rattler-build-log.txt
+**/current_repodata.json
+**/repodata_from_packages.json
+**/index.html
+**/.cache/

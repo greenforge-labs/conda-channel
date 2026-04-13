@@ -1,0 +1,13 @@
+# https://taskfile.dev
+
+version: "3"
+
+tasks:
+  build:
+    desc: Build all recipes and reindex the channel
+    cmds:
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/livox-sdk2/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/robin/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/kiss-matcher/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
+      # rattler-build writes incorrect hashes in repodata.json — reindex from actual files
+      - pixi exec --spec conda-index -- python3 -m conda_index .
