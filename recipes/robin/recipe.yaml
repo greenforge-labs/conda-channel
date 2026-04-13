@@ -1,0 +1,34 @@
+package:
+  name: robin
+  version: "1.2.4"
+
+source:
+  - url: https://github.com/MIT-SPARK/ROBIN/archive/v.1.2.4.tar.gz
+    target_directory: robin
+  - git: https://github.com/jingnanshi/pmc.git
+    rev: a2dfd612a501bca83c47206255dbbff619481f97
+    target_directory: robin/pmc-local
+  - git: https://github.com/mpoeter/xenium.git
+    rev: 1c449ae953ce2a440b0d16c5ed1181d2754860ab
+    target_directory: robin/xenium-local
+
+build:
+  script:
+    - cd robin
+    - python $RECIPE_DIR/patch_cmake.py cmake/DownloadExternal.cmake
+    - cmake -B build -DCMAKE_INSTALL_PREFIX=$PREFIX -DUSE_SYSTEM_EIGEN=ON -DBUILD_TESTS=OFF -DCMAKE_CXX_FLAGS="-include cassert" -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    - cmake --build build -j$CPU_COUNT
+    - cmake --install build
+    # Fix robin's cmake exports — they incorrectly bake in build-tree paths
+    # (BUILD_INTERFACE generator expressions leak into installed config).
+    # Remove any non-existent paths from INTERFACE_INCLUDE_DIRECTORIES.
+    - python $RECIPE_DIR/fix_cmake_exports.py $PREFIX
+
+requirements:
+  build:
+    - cmake
+    - cxx-compiler
+    - make
+    - python
+  host:
+    - eigen

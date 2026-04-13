@@ -1,0 +1,19 @@
+package:
+  name: livox-sdk2
+  version: "2.0.0"
+
+source:
+  git: https://github.com/greenforge-labs/Livox-SDK2.git
+  rev: f7cbbef2a8f8b2bdf2208c711232f7a2dcfead1c
+
+build:
+  script:
+    - cmake -B build -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    - cmake --build build -j$CPU_COUNT
+    - cmake --install build
+
+requirements:
+  build:
+    - cmake
+    - cxx-compiler
+    - make

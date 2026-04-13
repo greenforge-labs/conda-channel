@@ -1,0 +1,26 @@
+package:
+  name: kiss-matcher
+  version: "0.1.0"
+
+source:
+  git: https://github.com/MIT-SPARK/KISS-Matcher.git
+  rev: 42154f8cd9bcdf0b475f1ed13334120316e3d7f9
+
+build:
+  script:
+    - cd cpp/kiss_matcher
+    - cmake -B build -DCMAKE_INSTALL_PREFIX=$PREFIX -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DUSE_SYSTEM_EIGEN3=ON -DUSE_SYSTEM_TBB=ON -DUSE_SYSTEM_ROBIN=ON -DCMAKE_CXX_FLAGS="-include cassert" -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+    - cmake --build build -j$CPU_COUNT
+    - cmake --install build
+
+requirements:
+  build:
+    - cmake
+    - cxx-compiler
+    - make
+  host:
+    - eigen
+    - tbb
+    - robin
+    - lz4
+    - flann
