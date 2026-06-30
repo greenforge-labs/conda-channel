@@ -1,6 +1,6 @@
 # conda-channel
 
-Public conda channel for GreenForge Labs custom packages.
+Conda channel for GreenForge Labs custom builds of third-party packages that aren't in conda-forge/Robostack.
 
 Served directly from this repo via raw.githubusercontent.com:
 
