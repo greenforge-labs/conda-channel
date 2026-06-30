@@ -1,0 +1,81 @@
+package:
+  name: ros-jazzy-rclrs
+  version: "0.7.0"
+
+# rclrs — the ROS 2 Rust client library — plus the generated Rust bindings for
+# the message packages rclrs needs (builtin_interfaces, rcl_interfaces,
+# rosgraph_msgs, action_msgs) AND the standard messages ferrous consumes
+# (std_msgs, sensor_msgs, geometry_msgs, diagnostic_msgs, nav_msgs).
+# OSS (Apache-2.0). rosidl-runtime-rs / rosidl-generator-rs come from conda (host).
+#
+# The msg packages are rebuilt from source ONLY to emit their Rust crates; the
+# build stages into $SRC_DIR/staging and copies only the Rust artifacts into
+# $PREFIX so the RoboStack C message packages are never clobbered.
+
+source:
+  - url: https://github.com/ros2-rust/ros2_rust/archive/refs/tags/v0.7.0.tar.gz
+    target_directory: src/ros2_rust
+
+build:
+  number: 0
+  script:
+    - unset PIP_NO_INDEX
+    - export CARGO_NET_OFFLINE=false
+    - export ROS_DISTRO=jazzy
+    - export LIBCLANG_PATH=$PREFIX/lib
+    - python -m pip install colcon-cargo colcon-ros-cargo toml
+    - cargo install --locked cargo-ament-build
+    - export PATH="$HOME/.cargo/bin:$PATH"
+    # Pull the ros2 message source repos referenced by ros2_rust's jazzy repos.
+    - vcs import src < src/ros2_rust/ros2_rust_jazzy.repos
+    # rosidl_runtime_rs + rosidl_generator_rs are provided by conda (host) — drop
+    # the source copies so colcon uses the installed ones (and skip examples).
+    - rm -rf src/ros2-rust/rosidl_runtime_rs src/ros2-rust/rosidl_rust src/ros2-rust/examples
+    - colcon build --merge-install --install-base "$SRC_DIR/staging" --base-paths src
+        --packages-up-to rclrs std_msgs sensor_msgs geometry_msgs diagnostic_msgs
+        nav_msgs builtin_interfaces action_msgs rosgraph_msgs rcl_interfaces
+        --cmake-args -DCMAKE_BUILD_TYPE=Release
+    # Keep only the net-new Rust artifacts (never the rebuilt C msg files).
+    - cd "$SRC_DIR/staging"
+    - for d in share/*/rust; do pkg=$(basename "$(dirname "$d")"); mkdir -p "$PREFIX/share/$pkg"; cp -r "$d" "$PREFIX/share/$pkg/"; done
+    - mkdir -p "$PREFIX/share/ament_index/resource_index/rust_packages"
+    - cp -r share/ament_index/resource_index/rust_packages/* "$PREFIX/share/ament_index/resource_index/rust_packages/" 2>/dev/null || true
+    # rclrs itself is a brand-new package (no RoboStack equivalent): copy it whole.
+    - cp -r share/rclrs "$PREFIX/share/" 2>/dev/null || true
+    - cp share/ament_index/resource_index/packages/rclrs "$PREFIX/share/ament_index/resource_index/packages/" 2>/dev/null || true
+
+requirements:
+  build:
+    - rust
+    - rust-src
+    - clang
+    - libclang
+    - cmake
+    - ninja
+    - make
+    - pip
+    - python 3.12.*
+    - numpy
+    - colcon-common-extensions
+    - vcstool
+    - git
+  host:
+    - python 3.12.*
+    - numpy
+    - ros-jazzy-rcl
+    - ros-jazzy-rmw
+    - ros-jazzy-rosidl-runtime-rs
+    - ros-jazzy-rosidl-generator-rs
+    - ros-jazzy-rosidl-default-generators
+    - ros-jazzy-rosidl-default-runtime
+    - ros-jazzy-rosidl-generator-c
+    - ros-jazzy-ament-cmake
+  run:
+    - ros-jazzy-rcl
+    - ros-jazzy-rmw
+    - ros-jazzy-rosidl-runtime-rs
+
+about:
+  homepage: https://github.com/ros2-rust/ros2_rust
+  license: Apache-2.0
+  summary: rclrs — ROS 2 client library for Rust, plus standard-message Rust bindings (RoboStack Jazzy)

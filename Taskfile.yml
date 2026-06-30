@@ -9,5 +9,13 @@ tasks:
       - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/livox-sdk2/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
       - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/robin/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
       - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/kiss-matcher/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
+      # ros2-rust stack (rclrs + rosidl Rust bindings). These build a colcon/cargo
+      # workspace, so they need --allow-network (fetch crates + colcon-cargo plugins)
+      # and the RoboStack channel. Build order: runtime-rs -> generator-rs -> rclrs;
+      # rclrs depends on the first two, so reindex the local channel before it.
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/rosidl-runtime-rs/recipe.yaml --output-dir . --allow-network --channel https://prefix.dev/robostack-jazzy --channel https://prefix.dev/conda-forge
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/rosidl-generator-rs/recipe.yaml --output-dir . --allow-network --channel https://prefix.dev/robostack-jazzy --channel https://prefix.dev/conda-forge
+      - pixi exec --spec conda-index -- python3 -m conda_index .
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/rclrs/recipe.yaml --output-dir . --allow-network --channel "file://$PWD" --channel https://prefix.dev/robostack-jazzy --channel https://prefix.dev/conda-forge
       # rattler-build writes incorrect hashes in repodata.json — reindex from actual files
       - pixi exec --spec conda-index -- python3 -m conda_index .
