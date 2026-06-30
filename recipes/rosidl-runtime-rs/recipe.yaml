@@ -1,0 +1,50 @@
+package:
+  name: ros-jazzy-rosidl-runtime-rs
+  version: "0.6.0"
+
+# Base Rust runtime support crate for ros2-rust (rosidl_runtime_rs).
+# OSS (Apache-2.0). First of the 3 ros2-rust packages; rclrs depends on it.
+# Inputs match the #310 spike pins (rosidl_runtime_rs @ v0.6.0).
+
+source:
+  # NOTE: rattler-build's `git:` source with target_directory checked out an
+  # empty tree here; the release tarball populates reliably (as robin's recipe does).
+  - url: https://github.com/ros2-rust/rosidl_runtime_rs/archive/refs/tags/v0.6.0.tar.gz
+    target_directory: src/rosidl_runtime_rs
+
+build:
+  number: 0
+  script:
+    # rattler-build sets PIP_NO_INDEX=True (offline); unset so pip can fetch the
+    # colcon cargo plugins (not on conda-forge). Build runs with --allow-network.
+    - unset PIP_NO_INDEX
+    - export CARGO_NET_OFFLINE=false
+    - export LIBCLANG_PATH=$PREFIX/lib
+    - python -m pip install colcon-cargo colcon-ros-cargo toml
+    - cargo install --locked cargo-ament-build
+    - export PATH="$HOME/.cargo/bin:$PATH"
+    - echo "=== colcon list (identification diagnostic) ===" && colcon list --base-paths src || true
+    - colcon build --merge-install --install-base $PREFIX
+        --base-paths src --packages-select rosidl_runtime_rs
+        --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+requirements:
+  build:
+    - rust
+    - rust-src
+    - clang
+    - libclang
+    - cmake
+    - make
+    - pip
+    - python
+    - colcon-common-extensions
+    - git
+  host:
+    - ros-jazzy-rosidl-runtime-c
+    - ros-jazzy-rosidl-generator-c
+
+about:
+  homepage: https://github.com/ros2-rust/rosidl_runtime_rs
+  license: Apache-2.0
+  summary: rosidl_runtime_rs — Rust runtime support for ROS 2 rosidl (RoboStack Jazzy)

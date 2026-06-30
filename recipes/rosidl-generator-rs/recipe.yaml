@@ -1,0 +1,46 @@
+package:
+  name: ros-jazzy-rosidl-generator-rs
+  version: "0.4.10"
+
+# rosidl_generator_rs: the rosidl extension that emits Rust bindings from IDL.
+# Pure ament_cmake (CMake macros + Python templates) — no Rust/cargo at build.
+# OSS (Apache-2.0). Pinned to the validated 0.4.10 (matches the #310 spike pins).
+
+source:
+  - url: https://github.com/ros2-rust/rosidl_rust/archive/refs/tags/0.4.10.tar.gz
+    target_directory: src/rosidl_rust
+
+build:
+  number: 0
+  script:
+    - colcon build --merge-install --install-base $PREFIX
+        --base-paths src --packages-select rosidl_generator_rs
+        --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+requirements:
+  build:
+    - cmake
+    - ninja
+    - make
+    - python 3.12.*
+    - colcon-common-extensions
+    - git
+  host:
+    - python 3.12.*
+    - ros-jazzy-ament-cmake
+    - ros-jazzy-ros-environment
+    - ros-jazzy-rosidl-cmake
+    - ros-jazzy-rosidl-pycommon
+    - ros-jazzy-rosidl-typesupport-c
+    - ros-jazzy-rosidl-typesupport-interface
+    - ros-jazzy-rosidl-generator-c
+    - ros-jazzy-rosidl-parser
+  run:
+    - ros-jazzy-rosidl-runtime-rs
+    - ros-jazzy-rosidl-generator-c
+    - ros-jazzy-rosidl-parser
+
+about:
+  homepage: https://github.com/ros2-rust/rosidl_rust
+  license: Apache-2.0
+  summary: rosidl_generator_rs — Rust binding generator for ROS 2 rosidl (RoboStack Jazzy)
