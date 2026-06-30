@@ -1,16 +1,6 @@
 # conda-channel
 
-Public conda channel for GreenForge Labs — **custom *builds* of third-party
-open-source libraries** that aren't in conda-forge/RoboStack (not proprietary
-GreenForge code).
-
-> [!WARNING]
-> **This channel is world-readable.** Only publish rebuilds of public/OSS
-> upstreams here. Do **not** publish proprietary GreenForge packages (e.g.
-> `ferrous_gnss`) to this channel — compiled artifacts would be world-downloadable
-> and the recipe would leak the private source repo. Proprietary packages belong
-> on the private channel (see
-> [greenforge-labs/anvil#317](https://github.com/greenforge-labs/anvil/issues/317)).
+Conda channel for GreenForge Labs custom builds of third-party packages that aren't in conda-forge/Robostack.
 
 Served directly from this repo via raw.githubusercontent.com:
 
