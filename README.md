@@ -2,6 +2,9 @@
 
 Conda channel for GreenForge Labs custom builds of third-party packages that aren't in conda-forge/Robostack.
 
+NOTE: This channel is **PUBLIC**. i.e. anything published here is world-downloadable. 
+Only publish packages intended for public distribution. Private/proprietary packages must go to a private channel.
+
 Served directly from this repo via raw.githubusercontent.com:
 
 ```
