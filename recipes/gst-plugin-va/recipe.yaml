@@ -1,0 +1,86 @@
+# GStreamer's VA-API plugin (libgstva.so), which conda-forge's gst-plugins-bad does not ship.
+#
+# conda-forge builds gst-plugins-bad without libva in its host requirements. The plugin is
+# declared "auto" in meson, so it is skipped without a warning and the package still looks
+# complete. See gst-libs/gst/va/meson.build, which needs libva >= 1.18 and libva-drm.
+#
+# This recipe builds the same upstream source with every plugin off except va, so the result
+# installs beside the stock gst-plugins-bad instead of replacing it. Rebuild it only when
+# GStreamer's plugin ABI changes.
+#
+# It gives vah264dec and vah265dec, which decode on an Intel iGPU instead of the CPU.
+
+package:
+  name: gst-plugin-va
+  version: "1.26.11"
+
+source:
+  url: https://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.26.11.tar.xz
+  sha256: 110fb82795f0e569b1e27b12ab9699d35c7762e1ff4db95335d6ac8d1442af3d
+
+build:
+  number: 3
+  script:
+    - meson setup builddir
+      --prefix=$PREFIX
+      --libdir=lib
+      --buildtype=release
+      -Dauto_features=disabled
+      -Dva=enabled
+      -Dexamples=disabled
+      -Dtests=disabled
+      -Dintrospection=disabled
+      -Dnls=disabled
+      -Ddoc=disabled
+    - meson compile -C builddir -j $CPU_COUNT
+    # auto_features=disabled turns off plugins only. Everything under gst-libs still builds,
+    # so a plain install would also write libgstcuda, libgstcodecparsers, every other support
+    # library and all the headers. Those paths belong to the stock gst-plugins-bad and two
+    # packages must not own the same file. Stage the install and copy only the VA files, none
+    # of which the stock package carries.
+    - meson install -C builddir --destdir "$SRC_DIR/stage"
+    - S="$SRC_DIR/stage$PREFIX"
+    - mkdir -p "$PREFIX/lib/gstreamer-1.0" "$PREFIX/lib/pkgconfig" "$PREFIX/include/gstreamer-1.0/gst/va"
+    - cp -a "$S/lib/gstreamer-1.0/libgstva.so" "$PREFIX/lib/gstreamer-1.0/"
+    - cp -a "$S"/lib/libgstva-1.0.so* "$PREFIX/lib/"
+    - cp -a "$S/lib/pkgconfig/gstreamer-va-1.0.pc" "$PREFIX/lib/pkgconfig/"
+    - cp -a "$S"/include/gstreamer-1.0/gst/va/*.h "$PREFIX/include/gstreamer-1.0/gst/va/"
+
+requirements:
+  build:
+    - c-compiler
+    - cxx-compiler
+    - meson
+    - ninja
+    - pkg-config
+  host:
+    - gstreamer ==1.26.11
+    - gst-plugins-base ==1.26.11
+    # libgstva.so records libgstcodecs-1.0.so.0 and libgstcodecparsers-1.0.so.0 as DT_NEEDED.
+    # The stock gst-plugins-bad supplies both, so it is a hard dependency at run time too.
+    - gst-plugins-bad ==1.26.11
+    - glib
+    # glib's gio-2.0.pc requires zlib. Without it pkg-config cannot resolve
+    # gstreamer-net-1.0 and meson tries to build GStreamer as a subproject.
+    - zlib
+    - libiconv
+    - libva
+    - libdrm
+  run:
+    - gstreamer ==1.26.11
+    - gst-plugins-base ==1.26.11
+    - gst-plugins-bad ==1.26.11
+
+tests:
+  - script:
+      # The bug being fixed is meson skipping the plugin in silence, so assert the file exists.
+      - test -f $PREFIX/lib/gstreamer-1.0/libgstva.so
+      - test -f $PREFIX/lib/libgstva-1.0.so
+      # There is no check here that the stock gst-plugins-bad files are absent. The test
+      # prefix contains them, because that package is a run dependency. Over-inclusion is
+      # prevented in the build instead: the install goes to a staging directory and only the
+      # four VA paths are copied out.
+      # Load the plugin for real. This fails if a DT_NEEDED library is missing.
+      # It does not assert that vah264dec is registered, because the VA plugin enumerates
+      # GPU devices at registration and a build container has no /dev/dri.
+      - gst-inspect-1.0 $PREFIX/lib/gstreamer-1.0/libgstva.so
