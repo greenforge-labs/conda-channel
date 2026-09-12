@@ -9,6 +9,7 @@ tasks:
       - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/livox-sdk2/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
       - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/robin/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
       - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/kiss-matcher/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
+      - pixi exec --spec rattler-build -- rattler-build build --recipe recipes/gst-plugin-va/recipe.yaml --output-dir . --channel https://prefix.dev/conda-forge
       # ros2-rust stack (rclrs + rosidl Rust bindings). These build a colcon/cargo
       # workspace, so they need --allow-network (fetch crates + colcon-cargo plugins)
       # and the RoboStack channel. Build order: runtime-rs -> generator-rs -> rclrs;
